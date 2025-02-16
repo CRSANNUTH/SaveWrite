@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saved Text</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Layout */
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 40px;
+            background: linear-gradient(135deg, #72c6f2, #4a90e2);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        .editor-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            text-shadow: 1px 1px 5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+    <div class="container mt-12">
+        <h1 class="text-5xl font-semibold text-center mb-8">Saved Text</h1>
+        <div class="editor-container">
+            <!-- Saved Content Area -->
+            <div id="savedText" class="editor border-2 p-4 bg-white"></div>
+            <!-- Download Button -->
+            <button id="downloadBtn" class="toolbar-button mt-4" title="Download as .txt">📥 Download as .txt</button>
+        </div>
+
+        <!-- Navigation Back to Editor -->
+        <div class="text-center mt-4">
+            <a href="index.html" class="text-white underline">Back to Editor</a>
+        </div>
+    </div>
+
+    <script>
+        // Fetch saved content from localStorage (if available)
+        const savedText = localStorage.getItem('savedText');
+        document.getElementById('savedText').innerHTML = savedText || 'No saved content found.';
+
+        // Add download functionality
+        document.getElementById('downloadBtn').addEventListener('click', () => {
+            const textToDownload = savedText || 'No saved content found.';
+            const blob = new Blob([textToDownload], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'saved_text.txt';
+            link.click();
+        });
+    </script>
+</body>
+</html>

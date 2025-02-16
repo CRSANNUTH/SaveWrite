@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaveWrite - Text Editor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex h-screen bg-gray-100">
+    <!-- Sidebar Navigation -->
+    <aside class="w-72 bg-gray-900 text-white flex flex-col p-6 space-y-4 shadow-lg">
+        <h1 class="text-3xl font-bold text-center">SaveWrite</h1>
+        <nav class="space-y-2">
+            <button onclick="showEditor()" class="w-full p-3 bg-blue-600 hover:bg-blue-500 rounded transition">Editor</button>
+            <button onclick="showSavedFiles()" class="w-full p-3 bg-gray-700 hover:bg-gray-600 rounded transition">Saved Files</button>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 p-8 bg-white shadow-md rounded-md mx-6 my-4">
+        <!-- Editor Page -->
+        <div id="editorPage" class="">
+            <!-- Toolbar -->
+            <div class="flex flex-wrap gap-3 mb-4 bg-gray-200 p-3 rounded-lg shadow">
+                <button id="undoBtn" class="p-2 bg-gray-300 hover:bg-gray-400 rounded transition">Undo</button>
+                <button id="redoBtn" class="p-2 bg-gray-300 hover:bg-gray-400 rounded transition">Redo</button>
+                <button id="boldBtn" class="p-2 bg-gray-300 hover:bg-gray-400 rounded transition font-bold">B</button>
+                <button id="italicBtn" class="p-2 bg-gray-300 hover:bg-gray-400 rounded transition italic">I</button>
+                <button id="underlineBtn" class="p-2 bg-gray-300 hover:bg-gray-400 rounded transition underline">U</button>
+                <select id="fontSizeSelect" class="p-2 bg-gray-300 rounded">
+                    <option value="14px">14px</option>
+                    <option value="18px">18px</option>
+                    <option value="24px">24px</option>
+                    <option value="30px">30px</option>
+                </select>
+            </div>
+            <!-- Editor -->
+            <div id="editor" class="w-full h-72 p-4 bg-white border rounded-md shadow-md outline-none" contenteditable="true"></div>
+            <div class="mt-4 flex gap-3">
+                <button id="saveButton" class="p-2 bg-green-600 hover:bg-green-500 text-white rounded transition">Save</button>
+                <button id="downloadButton" class="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded transition">Download</button>
+            </div>
+        </div>
+        
+        <!-- Saved Files Page -->
+        <div id="savedFilesPage" class="hidden">
+            <h2 class="text-2xl font-bold mb-4">Saved Files</h2>
+            <div id="savedFilesList" class="space-y-2 bg-gray-100 p-4 rounded shadow-inner"></div>
+        </div>
+    </main>
+    
+    <script>
+        class TextEditor {
+            constructor() {
+                this.editor = document.getElementById('editor');
+                this.undoStack = [];
+                this.redoStack = [];
+                this.savedFiles = [];
+                this.setupListeners();
+            }
+
+            setupListeners() {
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+                document.getElementById('boldBtn').addEventListener('click', () => document.execCommand('bold'));
+                document.getElementById('italicBtn').addEventListener('click', () => document.execCommand('italic'));
+                document.getElementById('underlineBtn').addEventListener('click', () => document.execCommand('underline'));
+                document.getElementById('fontSizeSelect').addEventListener('change', (e) => document.execCommand('fontSize', false, '7'));
+                document.getElementById('saveButton').addEventListener('click', () => this.saveText());
+                document.getElementById('downloadButton').addEventListener('click', () => this.downloadText());
+                this.editor.addEventListener('input', () => this.saveState());
+            }
+
+            saveState() {
+                this.undoStack.push(this.editor.innerHTML);
+                if (this.undoStack.length > 10) this.undoStack.shift();
+                this.redoStack = [];
+            }
+
+            undo() {
+                if (this.undoStack.length > 1) {
+                    this.redoStack.push(this.undoStack.pop());
+                    this.editor.innerHTML = this.undoStack[this.undoStack.length - 1];
+                }
+            }
+
+            redo() {
+                if (this.redoStack.length > 0) {
+                    this.editor.innerHTML = this.redoStack.pop();
+                }
+            }
+
+            saveText() {
+                const text = this.editor.innerHTML;
+                const fileName = `file-${Date.now()}.html`;
+                this.savedFiles.push({ fileName, content: text });
+                this.updateSavedFiles(fileName);
+            }
+
+            downloadText() {
+                const text = this.editor.innerHTML;
+                const fileName = `download-${Date.now()}.html`;
+                const blob = new Blob([text], { type: 'text/html' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+            }
+
+            updateSavedFiles(fileName) {
+                const savedFilesList = document.getElementById('savedFilesList');
+                const fileDiv = document.createElement('div');
+                fileDiv.textContent = fileName;
+                fileDiv.classList.add('p-2', 'bg-gray-200', 'rounded', 'cursor-pointer', 'hover:bg-gray-300', 'transition');
+                fileDiv.addEventListener('click', () => this.openFile(fileName));
+                savedFilesList.appendChild(fileDiv);
+            }
+
+            openFile(fileName) {
+                const file = this.savedFiles.find(f => f.fileName === fileName);
+                if (file) {
+                    const newWindow = window.open();
+                    newWindow.document.write(file.content);
+                    newWindow.document.close();
+                }
+            }
+        }
+
+        const editor = new TextEditor();
+
+        function showEditor() {
+            document.getElementById('editorPage').classList.remove('hidden');
+            document.getElementById('savedFilesPage').classList.add('hidden');
+        }
+
+        function showSavedFiles() {
+            document.getElementById('editorPage').classList.add('hidden');
+            document.getElementById('savedFilesPage').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
